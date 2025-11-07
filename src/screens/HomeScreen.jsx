@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import SearchBar from '../components/SearchBar';
 import ListItem from '../components/ListItem';
 import { getItems } from '../api/client';
 import { common } from '../styles/common';
+import theme from '../styles/theme';
 
 export default function HomeScreen({ navigation }) {
   const [input, setInput] = useState('');
@@ -60,15 +61,59 @@ return (
     />
 
 
-    <View style={[common.row, { gap: 12, marginBottom: 12, flexWrap: 'wrap' }]}>
-      <Pressable onPress={() => setSort('mcapDesc')}><Text>MCap ↓</Text></Pressable>
-      <Pressable onPress={() => setSort('alpha')}><Text>ABC</Text></Pressable>
-      <Pressable onPress={() => setSort('priceAsc')}><Text>€ ↑</Text></Pressable>
-      <Pressable onPress={() => setSort('priceDesc')}><Text>€ ↓</Text></Pressable>
-      <Pressable onPress={() => setSort('changeDesc')}><Text>Δ24h ↓</Text></Pressable>
-      <Pressable onPress={() => setSort('changeAsc')}><Text>Δ24h ↑</Text></Pressable>
-      <Pressable onPress={() => setOnlyGreen(v => !v)}><Text>{onlyGreen ? 'Green ✓' : 'Green only'}</Text></Pressable>
-    </View>
+<View style={styles.chipRow}>
+  <Pressable
+    onPress={() => setSort('mcapDesc')}
+    accessibilityLabel="Sort by market cap descending"
+    style={[styles.chip, sort === 'mcapDesc' && styles.chipActive]}>
+    <Text style={[styles.chipText, sort === 'mcapDesc' && styles.chipTextActive]}>MCap ↓</Text>
+  </Pressable>
+
+  <Pressable
+    onPress={() => setSort('alpha')}
+    accessibilityLabel="Sort alphabetically"
+    style={[styles.chip, sort === 'alpha' && styles.chipActive]}>
+    <Text style={[styles.chipText, sort === 'alpha' && styles.chipTextActive]}>ABC</Text>
+  </Pressable>
+
+  <Pressable
+    onPress={() => setSort('priceAsc')}
+    accessibilityLabel="Sort by price ascending"
+    style={[styles.chip, sort === 'priceAsc' && styles.chipActive]}>
+    <Text style={[styles.chipText, sort === 'priceAsc' && styles.chipTextActive]}>€ ↑</Text>
+  </Pressable>
+
+  <Pressable
+    onPress={() => setSort('priceDesc')}
+    accessibilityLabel="Sort by price descending"
+    style={[styles.chip, sort === 'priceDesc' && styles.chipActive]}>
+    <Text style={[styles.chipText, sort === 'priceDesc' && styles.chipTextActive]}>€ ↓</Text>
+  </Pressable>
+
+  <Pressable
+    onPress={() => setSort('changeDesc')}
+    accessibilityLabel="Sort by 24 hour change descending"
+    style={[styles.chip, sort === 'changeDesc' && styles.chipActive]}>
+    <Text style={[styles.chipText, sort === 'changeDesc' && styles.chipTextActive]}>Δ24h ↓</Text>
+  </Pressable>
+
+  <Pressable
+    onPress={() => setSort('changeAsc')}
+    accessibilityLabel="Sort by 24 hour change ascending"
+    style={[styles.chip, sort === 'changeAsc' && styles.chipActive]}>
+    <Text style={[styles.chipText, sort === 'changeAsc' && styles.chipTextActive]}>Δ24h ↑</Text>
+  </Pressable>
+
+  <Pressable
+    onPress={() => setOnlyGreen(v => !v)}
+    accessibilityLabel="Toggle green only filter"
+    style={[styles.chip, onlyGreen && styles.chipActive]}>
+    <Text style={[styles.chipText, onlyGreen && styles.chipTextActive]}>
+      {onlyGreen ? 'Green ✓' : 'Green only'}
+    </Text>
+  </Pressable>
+</View>
+
 
     {loading ? (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -100,3 +145,32 @@ return (
   </View>
 );
 }
+
+const styles = StyleSheet.create({
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  chip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+  },
+  chipActive: {
+    borderColor: theme.PRIMARY_COLOR,
+    backgroundColor: `${theme.PRIMARY_COLOR}20`, // subtle tint
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  chipTextActive: {
+    fontWeight: '700',
+  },
+});
+
