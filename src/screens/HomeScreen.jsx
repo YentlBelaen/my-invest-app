@@ -48,12 +48,17 @@ export default function HomeScreen({ navigation }) {
     if (sort === 'priceDesc') return [...list].sort((a, b) => byPrice(b, a));
     if (sort === 'changeAsc') return [...list].sort(byChange);
     if (sort === 'changeDesc') return [...list].sort((a, b) => byChange(b, a));
-    return [...list].sort((a, b) => byMcap(b, a)); // default mcap desc
+    return [...list].sort((a, b) => byMcap(b, a));
   }, [data, sort, onlyGreen]);
 
 return (
   <View style={common.screen}>
-    <SearchBar value={input} onChange={setInput} />
+    <SearchBar
+      value={input}
+      onChange={setInput}
+      onSubmit={() => setQuery(input)}
+    />
+
 
     <View style={[common.row, { gap: 12, marginBottom: 12, flexWrap: 'wrap' }]}>
       <Pressable onPress={() => setSort('mcapDesc')}><Text>MCap ↓</Text></Pressable>
