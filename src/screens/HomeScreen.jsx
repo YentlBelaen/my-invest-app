@@ -1,19 +1,97 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, ActivityIndicator, Pressable } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import SearchBar from '../components/SearchBar';
+import ListItem from '../components/ListItem';
+import { getItems } from '../api/client';
+import { common } from '../styles/common';
 
 export default function HomeScreen({ navigation }) {
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Home (List)</Text>
-      <Pressable onPress={() => navigation.navigate('Detail', { id: 'bitcoin' })} style={styles.btn}>
-        <Text style={styles.btnText}>Go to Detail (demo)</Text>
-      </Pressable>
-    </View>
-  );
-}
+  const [input, setInput] = useState('');
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState('mcapDesc');
+  const [onlyGreen, setOnlyGreen] = useState(false);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
-  btn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
-  btnText: { fontSize: 16 },
-});
+  useEffect(() => {
+    console.log('[HomeScreen] mount');
+    return () => console.log('[HomeScreen] unmount');
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(input), 300);
+    return () => clearTimeout(t);
+  }, [input]);
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    getItems(query, 1, 100)
+      .then(items => setData(items))
+      .catch(() => setError('Failed to load.'))
+      .finally(() => setLoading(false));
+  }, [query]);
+
+  const filteredSorted = useMemo(() => {
+    let list = data;
+    if (onlyGreen) list = list.filter(x => (x.price_change_percentage_24h || 0) > 0);
+
+    const byAlpha = (a, b) => a.name.localeCompare(b.name);
+    const byPrice = (a, b) => (a.current_price || 0) - (b.current_price || 0);
+    const byChange = (a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0);
+    const byMcap = (a, b) => (a.market_cap || 0) - (b.market_cap || 0);
+
+    if (sort === 'alpha') return [...list].sort(byAlpha);
+    if (sort === 'priceAsc') return [...list].sort(byPrice);
+    if (sort === 'priceDesc') return [...list].sort((a, b) => byPrice(b, a));
+    if (sort === 'changeAsc') return [...list].sort(byChange);
+    if (sort === 'changeDesc') return [...list].sort((a, b) => byChange(b, a));
+    return [...list].sort((a, b) => byMcap(b, a)); // default mcap desc
+  }, [data, sort, onlyGreen]);
+
+return (
+  <View style={common.screen}>
+    <SearchBar value={input} onChange={setInput} />
+
+    <View style={[common.row, { gap: 12, marginBottom: 12, flexWrap: 'wrap' }]}>
+      <Pressable onPress={() => setSort('mcapDesc')}><Text>MCap ↓</Text></Pressable>
+      <Pressable onPress={() => setSort('alpha')}><Text>ABC</Text></Pressable>
+      <Pressable onPress={() => setSort('priceAsc')}><Text>€ ↑</Text></Pressable>
+      <Pressable onPress={() => setSort('priceDesc')}><Text>€ ↓</Text></Pressable>
+      <Pressable onPress={() => setSort('changeDesc')}><Text>Δ24h ↓</Text></Pressable>
+      <Pressable onPress={() => setSort('changeAsc')}><Text>Δ24h ↑</Text></Pressable>
+      <Pressable onPress={() => setOnlyGreen(v => !v)}><Text>{onlyGreen ? 'Green ✓' : 'Green only'}</Text></Pressable>
+    </View>
+
+    {loading ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator />
+        <Text style={{ marginTop: 8 }}>Loading…</Text>
+      </View>
+    ) : error ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: 'red' }}>{error}</Text>
+        <Pressable onPress={() => setQuery(q => q)}><Text>Retry</Text></Pressable>
+      </View>
+    ) : filteredSorted.length === 0 ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={common.muted}>No results.</Text>
+      </View>
+    ) : (
+      <FlashList
+        data={filteredSorted}
+        keyExtractor={(item) => String(item.id)}
+        estimatedItemSize={80}
+        renderItem={({ item }) => (
+          <ListItem
+            item={item}
+            onPress={() => navigation.navigate('Detail', { id: item.id })}
+          />
+        )}
+      />
+    )}
+  </View>
+);
+}
