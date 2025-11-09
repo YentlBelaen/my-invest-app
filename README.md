@@ -28,9 +28,6 @@ The app filters locally on `name` and `symbol`.
 `GET /coins/{id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`  
 Displays logo (centered, `resizeMode="contain"`), `name`, `symbol`, `market_data.current_price.eur`, `market_data.market_cap.eur`, `market_data.price_change_percentage_24h`, `market_cap_rank`, and a short plain-text description.
 
-**Notes**  
-- Network errors/timeouts show a friendly message; requests time out after ~8s.
-
 ## 4. Search and Sort Explanation
 **Search**  
 - Debounced by **300ms** while typing (reduces unnecessary requests).  
